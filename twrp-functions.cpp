@@ -35,6 +35,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cctype>
 #include <algorithm>
 #include "twrp-functions.hpp"
 #include "twcommon.h"
@@ -96,7 +97,7 @@ int TWFunc::Exec_Cmd(const string& cmd) {
 }
 
 // Returns "file.name" from a full /path/to/file.name
-string TWFunc::Get_Filename(string Path) {
+string TWFunc::Get_Filename(const string& Path) {
 	size_t pos = Path.find_last_of("/");
 	if (pos != string::npos) {
 		string Filename;
@@ -107,7 +108,7 @@ string TWFunc::Get_Filename(string Path) {
 }
 
 // Returns "/path/to/" from a full /path/to/file.name
-string TWFunc::Get_Path(string Path) {
+string TWFunc::Get_Path(const string& Path) {
 	size_t pos = Path.find_last_of("/");
 	if (pos != string::npos) {
 		string Pathonly;
@@ -389,7 +390,7 @@ int32_t TWFunc::timespec_diff_ms(timespec& start, timespec& end)
 #ifndef BUILD_TWRPTAR_MAIN
 
 // Returns "/path" from a full /path/to/file.name
-string TWFunc::Get_Root_Path(string Path) {
+string TWFunc::Get_Root_Path(const string& Path) {
 	string Local_Path = Path;
 
 	// Make sure that we have a leading slash
@@ -566,7 +567,7 @@ void TWFunc::Update_Log_File(void) {
 
 void TWFunc::Update_Intent_File(string Intent) {
 	if (PartitionManager.Mount_By_Path("/cache", false) && !Intent.empty()) {
-		TWFunc::write_file("/cache/recovery/intent", Intent);
+		TWFunc::write_to_file("/cache/recovery/intent", Intent);
 	}
 }
 
@@ -758,7 +759,7 @@ int TWFunc::read_file(string fn, uint64_t& results) {
 	return -1;
 }
 
-int TWFunc::write_file(string fn, string& line) {
+int TWFunc::write_to_file(const string& fn, const string& line) {
 	FILE *file;
 	file = fopen(fn.c_str(), "w");
 	if (file != NULL) {
@@ -856,6 +857,10 @@ void TWFunc::Auto_Generate_Backup_Name() {
 	if (propvalue.empty()) {
 		DataManager::SetValue(TW_BACKUP_NAME, Get_Current_Date());
 		return;
+	}
+	else {
+		//remove periods from build display so it doesn't confuse the extension code
+		propvalue.erase(remove(propvalue.begin(), propvalue.end(), '.'), propvalue.end());
 	}
 	string Backup_Name = Get_Current_Date();
 	Backup_Name += "_" + propvalue;
@@ -1037,11 +1042,11 @@ int TWFunc::Set_Brightness(std::string brightness_value)
 
 	if (DataManager::GetIntValue("tw_has_brightnesss_file")) {
 		LOGINFO("TWFunc::Set_Brightness: Setting brightness control to %s\n", brightness_value.c_str());
-		result = TWFunc::write_file(DataManager::GetStrValue("tw_brightness_file"), brightness_value);
+		result = TWFunc::write_to_file(DataManager::GetStrValue("tw_brightness_file"), brightness_value);
 		DataManager::GetValue("tw_secondary_brightness_file", secondary_brightness_file);
 		if (!secondary_brightness_file.empty()) {
 			LOGINFO("TWFunc::Set_Brightness: Setting secondary brightness control to %s\n", brightness_value.c_str());
-			TWFunc::write_file(secondary_brightness_file, brightness_value);
+			TWFunc::write_to_file(secondary_brightness_file, brightness_value);
 		}
 	}
 	return result;
@@ -1118,8 +1123,27 @@ void TWFunc::copy_kernel_log(string curr_storage) {
 
 	std::string result;
 	Exec_Cmd(dmesgCmd, result);
-	write_file(dmesgDst, result);
+	write_to_file(dmesgDst, result);
 	gui_msg(Msg("copy_kernel_log=Copied kernel log to {1}")(dmesgDst));
 	tw_set_default_metadata(dmesgDst.c_str());
+}
+
+bool TWFunc::isNumber(string strtocheck) {
+	int num = 0;
+	std::istringstream iss(strtocheck);
+
+	if (!(iss >> num).fail())
+		return true;
+	else
+		return false;
+}
+
+int TWFunc::stream_adb_backup(string &Restore_Name) {
+	string cmd = "/sbin/bu --twrp stream " + Restore_Name;
+	LOGINFO("stream_adb_backup: %s\n", cmd.c_str());
+	int ret = TWFunc::Exec_Cmd(cmd);
+	if (ret != 0)
+		return -1;
+	return ret;
 }
 #endif // ndef BUILD_TWRPTAR_MAIN

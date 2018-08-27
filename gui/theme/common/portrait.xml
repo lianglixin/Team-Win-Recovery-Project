@@ -393,14 +393,8 @@
 			</checkbox>
 
 			<checkbox>
-				<placement x="%indent%" y="%row15_y%"/>
-				<text>{@enable_legacy_props_chk=Enable legacy properties for old zips}</text>
-				<data variable="tw_enable_legacy_props"/>
-			</checkbox>
-
-			<checkbox>
 				<condition var1="tw_has_injecttwrp" var2="1"/>
-				<placement x="%indent%" y="%row16a_y%"/>
+				<placement x="%indent%" y="%row15_y%"/>
 				<text>{@inject_twrp_chk=Inject TWRP after install}</text>
 				<data variable="tw_inject_after_zip"/>
 			</checkbox>
@@ -2215,7 +2209,7 @@
 			<fileselector>
 				<placement x="%indent%" y="%row3_y%" w="%content_width%" h="%fileselector_install_height%"/>
 				<text>{@restore_sel_pack_fs=Select Package to Restore:}</text>
-				<filter folders="1" files="0" nav="0"/>
+				<filter folders="1" files="1" nav="0" extn=".ab"/>
 				<path name="tw_backups_folder"/>
 				<data name="tw_restore" default=""/>
 				<selection name="tw_restore_name"/>
@@ -2435,6 +2429,7 @@
 			</partitionlist>
 
 			<checkbox>
+				<condition var1="tw_enable_adb_backup" op="=" var2="0"/>
 				<placement x="%indent%" y="%row17_y%"/>
 				<text>{@restore_enable_digest_chk=Enable Digest Verification of Backup Files}</text>
 				<data variable="tw_skip_digest_check"/>

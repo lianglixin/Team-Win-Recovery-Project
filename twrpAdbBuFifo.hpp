@@ -1,5 +1,5 @@
 /*
-        Copyright 2015 bigbiff/Dees_Troy TeamWin
+        Copyright 2013 to 2017 TeamWin
         This file is part of TWRP/TeamWin Recovery Project.
 
         TWRP is free software: you can redistribute it and/or modify
@@ -16,20 +16,25 @@
         along with TWRP.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _GUI_HPP_HEADER
-#define _GUI_HPP_HEADER
+#ifndef TWRPADBFIFO_HPP
+#define TWRPADBFIFO_HPP
 
-#include "twmsg.h"
+#include <string>
+#include <pthread.h>
 
-void set_select_fd();
+#define TW_ADB_FIFO "/tmp/twadbfifo"
 
-void gui_msg(const char* text);
-void gui_warn(const char* text);
-void gui_err(const char* text);
-void gui_highlight(const char* text);
-void gui_msg(Message msg);
-
-std::string gui_parse_text(std::string inText);
-std::string gui_lookup(const std::string& resource_name, const std::string& default_value);
-
-#endif //_GUI_HPP_HEADER
+class twrpAdbBuFifo {
+	public:
+		twrpAdbBuFifo(void);
+		pthread_t threadAdbBuFifo(void);
+	private:
+		bool start(void);
+		bool Backup_ADB_Command(std::string Options);
+		void Check_Adb_Fifo_For_Events(void);
+		bool Restore_ADB_Backup(void);
+		typedef bool (twrpAdbBuFifo::*ThreadPtr)(void);
+		typedef void* (*PThreadPtr)(void *);
+		int adb_fifo_fd;
+};
+#endif
